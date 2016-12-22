@@ -1,0 +1,12 @@
+{
+	"name": "Messenger-Math",
+	"version": "0.0.1",
+	"description": "A Node.js app for using a Messenger bot as a calculator",
+	"scripts": { "start" : "node server.js" },
+	
+	"dependencies": {
+	    "express": "latest",
+	    "mongodb": "latest",
+	    "body-parser": "latest"
+	  }
+}
