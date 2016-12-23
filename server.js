@@ -46,6 +46,9 @@ app.get('/webhook', function (req, res) {
 })
 */
 
+//-------------------------------------------------------------------------------
+
+/*
 app.post('/webhook', function (req, res) {
         var data = req.body;
 
@@ -77,6 +80,39 @@ app.post('/webhook', function (req, res) {
 function receivedMessage(event) {
         // Putting a stub for now, we'll expand it in the following steps
         console.log("Message data: ", event.message);
+}
+*/
+
+app.post('/webhook', function (req, res) {
+    let messaging_events = req.body.entry[0].messaging
+    for (let i = 0; i < messaging_events.length; i++) {
+        let event = req.body.entry[0].messaging[i];
+        let sender = event.sender.id;
+        if (event.message && event.message.text) {
+            let text = event.message.text;
+            sendTextMessage(sender, "Text received, echo: " + text.substring(0, 200));
+        }
+    }
+    res.sendStatus(200);
+});
+
+function sendTextMessage(sender, text) {
+    let messageData = { text:text }
+    request({
+        url: 'https://graph.facebook.com/v2.8/me/messages',
+        qs: {access_token:process.env.PAGE_ACCESS_TOKEN},
+        method: 'POST',
+        json: {
+            recipient: {id:sender},
+            message: messageData,
+        }
+    }, function(error, response, body) {
+        if (error) {
+            console.log('Error sending messages: ', error)
+        } else if (response.body.error) {
+            console.log('Error: ', response.body.error)
+        }
+    })
 }
 
 // Find the port number, and start the server on that port
