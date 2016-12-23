@@ -90,8 +90,6 @@ function sendTextMessage(sender, text)
 app.post('/webhook', function (req, res) {
   var data = req.body;
 
-  console.log("Request body: ", data);
-
   // Make sure this is a page subscription
   if (data.object === 'page') {
 
