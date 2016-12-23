@@ -1,12 +1,18 @@
 {
-	"name": "Messenger-Math",
-	"version": "0.0.1",
-	"description": "A Node.js app for using a Messenger bot as a calculator",
-	"scripts": { "start" : "node server.js" },
+	"name"        : "Messenger-Math",
+	"author"      : "Evgeni Dobranov",
+	"version"     : "0.0.1",
+	"description" : "A Node.js app for using a Messenger bot as a calculator",
+	"main"        : "server.js",
+	
+	"scripts"     : {
+						"start" : "node server.js"
+					},
 	
 	"dependencies": {
-	    "express": "latest",
-	    "mongodb": "latest",
-	    "body-parser": "latest"
+	    "express"     : "latest",
+	    "body-parser" : "latest",
+	    "request"     : "latest",
+	    "mongodb"     : "latest"
 	  }
 }
