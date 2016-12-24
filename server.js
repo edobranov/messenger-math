@@ -85,9 +85,9 @@ app.post('/webhook', function (req, res) {
         }
 });
 
-/****************************
- * Process user input cases *
- ****************************/
+/***********************
+ * Process user input  *
+ ***********************/
 function receivedMessage(event) {
 
         // Local variables separating all message event entities
@@ -103,99 +103,86 @@ function receivedMessage(event) {
                 senderID, recipientID, timeOfMessage);
         console.log(JSON.stringify(message));
 
-        // Process cases
+        // Process cases from user input
         if (messageText)
         {
                 switch (messageText) {
-                        case 'reset' :
-                                // sendGenericMessage(senderID);
-                        break;
 
                         case 'help' :
-
+                                messageText = "The following basic operators are supported:\n" + 
+                                               "- addition (a + b)\n"                          +
+                                               "- subtraction (a - b)\n"                       +
+                                               "- multiplication (a * b)\n"                    +
+                                               "- division (a / b)\n"                          +
+                                               "- exponentiation (a ^ b)\n"                    +
+                                               "- ln a / log10 a\n"                            +
+                                               "- sin a / cos a / tan a\n"                     +
+                                               "- asin a / acos a / atan a\n"                  +
+                                               "- factorial (a!)\n"                            +
+                                               "- grouping (a * (b + c))\n"                    +
+                                               "Full documentation can be found at:\n"         +
+                                               "https://github.com/silentmatt/expr-eval/tree/master";
                         break;
 
+                        // Try evaluating the expression and handle any possible errors
                         default:
                                 try {
                                         messageText = Parser.evaluate(messageText).toString();
                                 }
                                 catch (err) {
-                                        // console.log(err);
                                         messageText = "Hmm, your expression doesn't look quite " +
                                                       "right... Try typing 'help' for some guidance.";
                                 }
                                 finally {
                                         sendTextMessage(senderID, messageText);
                                 }
-                                /*
-                                if (messageText.match(/^[0-9\+\-\*\/\t ]*$/)) {
-                                        var ans = Parser.evaluate(messageText);
-                                        if (ans) {
-                                                sendTextMessage(senderID, ans.toString());
-                                        }
-                                        else {
-                                                sendTextMessage(senderID, "Hmm, your expression doesn't " +
-                                                        "look quite right... Try typing 'help' for some guidance.");
-                                        }
-                                }
-                                else {
-                                        sendTextMessage(senderID, "Hmm, your expression doesn't " +
-                                                "look quite right... Try typing 'help' for some guidance.");
-                                }
-                                */
                 }
 
+        // Add some output for message attachments
         } else if (messageAttachments) {
-                sendTextMessage(senderID, "Message with attachment received");
+                sendTextMessage(senderID, "That's a nice attachment! But try entering text instead please :)");
         }
 }
 
-// function checkInputValidity(messageText) {
-        
-//        return messageText.value.match(/^[0-9]+$/);
-
-//}
-
+/****************************************************
+ * Construct message response and call API function *
+ ****************************************************/
 function sendTextMessage(recipientId, messageText) {
-  var messageData = {
-    recipient: {
-      id: recipientId
-    },
-    message: {
-      text: messageText
-    }
-  };
+        
+        var messageData = {
+                recipient : { id   : recipientId },
+                message   : { text : messageText }
+        };
 
-  callSendAPI(messageData);
+        callSendAPI(messageData);
 }
 
+/*****************************************************************
+ * Calls the Messenger API to return all of the data to the user *
+ *****************************************************************/
 function callSendAPI(messageData) {
-  request({
-    uri: 'https://graph.facebook.com/v2.6/me/messages',
-    qs: { access_token: process.env.PAGE_ACCESS_TOKEN },
-    method: 'POST',
-    json: messageData
 
-  }, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      var recipientId = body.recipient_id;
-      var messageId = body.message_id;
-
-      console.log("Successfully sent generic message with id %s to recipient %s", 
-        messageId, recipientId);
-    } else {
-      console.error("Unable to send message.");
-      console.error(response);
-      console.error(error);
-    }
-  });  
+        request (
+        {
+                uri    : 'https://graph.facebook.com/v2.6/me/messages',
+                qs     : { access_token: process.env.PAGE_ACCESS_TOKEN },
+                method : 'POST',
+                json   : messageData
+        },
+        // Debugging output for response (or attempt) made
+        function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                        var recipientId = body.recipient_id;
+                        var messageId = body.message_id;
+                        console.log("Successfully sent message with id %s to recipient %s", 
+                                messageId, recipientId);
+                } else {
+                        console.error("Unable to send message.");
+                        console.error(response);
+                        console.error(error);
+                }
+        });  
 }
-
-
-
-
-
-
 
 // Find the port number, and start the server on that port
 var port = process.env.PORT || 5000
