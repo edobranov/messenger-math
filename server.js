@@ -120,7 +120,7 @@ function receivedMessage(event) {
                                         messageText = Parser.evaluate(messageText).toString();
                                 }
                                 catch (err) {
-                                        console.log(err);
+                                        // console.log(err);
                                         messageText = "Hmm, your expression doesn't look quite " +
                                                       "right... Try typing 'help' for some guidance.";
                                 }
