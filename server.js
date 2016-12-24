@@ -3,13 +3,12 @@
 // Author:      EVGENI C. DOBRANOV
 // Date:        12/23/2016
 
-//var express    = require('express');
-//var app        = express();
 var app        = require('express')();
 var bodyParser = require('body-parser');
 var request    = require('request');
+var Parser     = require('expr-eval').Parser;
 
-// Initialize the body parser (lets us get data from POST) and CORS for cross domain accessing of data
+// Initialize the body parser (lets us get data from POST)
 app.use(bodyParser.json());
 
 /*
@@ -21,154 +20,128 @@ app.use(function(request, response, next) {
 });
 */
 
-// Initialize the MongoDB client and establish a connection to the database
+/****************************************************************************
+ * Initialize the MongoDB client and establish a connection to the database *
+ ****************************************************************************/
 var mongoUri    = process.env.MONGODB_URI || process.env.MONGOHW_URL || 'mongodb://localhost/messenger-math';
 var MongoClient = require('mongodb').MongoClient, format = ('util').format;
-var db          = MongoClient.connect(mongoUri, function(error, databaseConnection) {
+var db          = MongoClient.connect(mongoUri, function (error, databaseConnection) {
                         if (!error) {
-                                console.log("DB connection successful");
                                 db = databaseConnection;
                         }
                         else {
-                                console.log("DB not connected");
-                                console.log("error: ", error);
-                                console.log("MONGOLAB_URI: ", process.env.MONGOLAB_URI);
-                                console.log("MONGOHW_URL: ", process.env.MONGOHW_URL);
+                                console.log("MONGODB connection unsuccessful: ", error);
                         }
                   });
 
+/**************************************
+ * Default route for app landing page *
+ **************************************/
 app.get('/', function (req, res) {
     res.send('Hello world!');
 });
 
-app.get('/webhook', function(req, res) {
-        if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === process.env.VERIFY_TOKEN)
-        {
-                console.log("Validating webhook");
+/****************************************************************************************************
+ *                    Validation route for Facebook's API (not for user access)                     *
+ *                                                                                                  *
+ *   Code provided at: https://developers.facebook.com/docs/messenger-platform/guides/quick-start   *
+ *                                                                                                  *
+ * Can alternatively go to terminal and run the following (replacing PAGE_ACCESS_TOKEN):            *
+ * curl -X POST "https://graph.facebook.com/v2.6/me/subscribed_apps?access_token=PAGE_ACCESS_TOKEN" *
+ ****************************************************************************************************/
+app.get('/webhook', function (req, res) {
+        if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === process.env.VERIFY_TOKEN) {
                 res.status(200).send(req.query['hub.challenge']);
         } else {
                 console.error("Failed validation. Make sure the validation tokens match.");
-                res.sendStatus(403);          
+                res.sendStatus(403);
         }
 });
 
-//-------------------------------------------------------------------------------
-
-/*
-
-app.post('/webhook', function (req, res) {
-    let messaging_events = req.body.entry[0].messaging
-    for (let i = 0; i < messaging_events.length; i++) {
-        let event = req.body.entry[0].messaging[i];
-        let sender = event.sender.id;
-        if (event.message && event.message.text) {
-            let text = event.message.text;
-            sendTextMessage(sender, "Text received, echo: " + text.substring(0, 200));
-        }
-    }
-    res.sendStatus(200);
-});
-
-function sendTextMessage(sender, text)
-{
-    let messageData = { text : text }
-    
-    request(
-        {
-                url    : 'https://graph.facebook.com/v2.6/me/messages',
-                qs     : { access_token : process.env.PAGE_ACCESS_TOKEN },
-                method : 'POST',
-                json   : { recipient : { id : sender },
-                           message   : messageData }
-        },
-
-    function(error, response, body)
-    {
-        if (error) {
-            console.log('Error sending messages: ', error)
-        } else if (response.body.error) {
-            console.log('Error: ', response.body.error)
-        }
-    })
-}
-*/
-
+/***************************************************************************
+ * Route to which the Messenger API sends POST data with user interactions *
+ ***************************************************************************/
 app.post('/webhook', function (req, res) {
 
-  var data = req.body;
+        // Local variable to hold all user data
+        var data = req.body;
 
-  // Make sure this is a page subscription
-  if (data.object === 'page') {
+        // Proceed only if this is a page subscription
+        if (data.object === 'page') {
 
-        var events = data.entry[0].messaging;
-
-        for (var i = 0; i < events.length; i++) {
-                var event = events[i];
-                if (event.message && !event.message.is_echo) {
-                        receivedMessage(event);
+                // Get all messaging events and iterate over them
+                var events = data.entry[0].messaging
+                for (var i = 0; i < events.length; i++)
+                {
+                        // Process current event only if it's a message and isn't an
+                        // echo (indicates a message sent from the bot itself)
+                        var event = events[i];
+                        if (event.message && !event.message.is_echo) {
+                                receivedMessage(event);
+                        }
                 }
-                //else {
-                //        console.log("Webhook received unknown event: ", event);
-                //}
+                
+                res.sendStatus(200);
         }
-
-    /*
-    // Iterate over each entry - there may be multiple if batched
-    data.entry.forEach(function(entry) {
-      var pageID = entry.id;
-      var timeOfEvent = entry.time;
-
-      // Iterate over each messaging event
-      entry.messaging.forEach(function(event) {
-        if (event.message) {
-          receivedMessage(event);
-        } else {
-          console.log("Webhook received unknown event: ", event);
-        }
-      });
-    });
-    */
-
-    // Assume all went well.
-    //
-    // You must send back a 200, within 20 seconds, to let us know
-    // you've successfully received the callback. Otherwise, the request
-    // will time out and we will keep trying to resend.
-    res.sendStatus(200);
-  }
 });
 
+/****************************
+ * Process user input cases *
+ ****************************/
 function receivedMessage(event) {
-  var senderID      = event.sender.id;
-  var recipientID   = event.recipient.id;
-  var timeOfMessage = event.timestamp;
-  var message       = event.message;
 
-  console.log("Received message for user %d and page %d at %d with message:", 
-    senderID, recipientID, timeOfMessage);
-  console.log(JSON.stringify(message));
+        // Local variables separating all message event entities
+        var senderID           = event.sender.id;
+        var recipientID        = event.recipient.id;
+        var timeOfMessage      = event.timestamp;
+        var message            = event.message;
+        var messageId          = message.mid;
+        var messageText        = message.text;
+        var messageAttachments = message.attachments;
 
-  var messageId = message.mid;
+        console.log("Received message for user %d and page %d at %d with message:", 
+                senderID, recipientID, timeOfMessage);
+        console.log(JSON.stringify(message));
 
-  var messageText = message.text;
-  var messageAttachments = message.attachments;
+        // Process cases
+        if (messageText)
+        {
+                switch (messageText) {
+                        case 'reset' :
+                                // sendGenericMessage(senderID);
+                        break;
 
-  if (messageText && !message.is_echo) {
+                        case 'help' :
 
-    // If we receive a text message, check to see if it matches a keyword
-    // and send back the example. Otherwise, just echo the text we received.
-    switch (messageText) {
-      case 'generic':
-        // sendGenericMessage(senderID);
-        break;
+                        break;
 
-      default:
-        sendTextMessage(senderID, messageText);
-    }
-  } else if (messageAttachments) {
-    sendTextMessage(senderID, "Message with attachment received");
-  }
+                        default:
+                                if (messageText.match(/^[0-9\+\-\*\/\t ]*$/)) {
+                                        var ans = Parser.evaluate(messageText);
+                                        if (ans) {
+                                                sendTextMessage(senderID, ans.toString());
+                                        }
+                                        else {
+                                                sendTextMessage(senderID, "Hmm, your expression doesn't " +
+                                                        "look quite right... Try typing 'help' for some guidance.");
+                                        }
+                                }
+                                else {
+                                        sendTextMessage(senderID, "Hmm, your expression doesn't " +
+                                                "look quite right... Try typing 'help' for some guidance.");
+                                }
+                }
+
+        } else if (messageAttachments) {
+                sendTextMessage(senderID, "Message with attachment received");
+        }
 }
+
+//function checkInputValidity(messageText) {
+        
+//        return messageText.value.match(/^[0-9]+$/);
+
+//}
 
 function sendTextMessage(recipientId, messageText) {
   var messageData = {
@@ -204,7 +177,6 @@ function callSendAPI(messageData) {
     }
   });  
 }
-
 
 
 
