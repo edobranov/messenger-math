@@ -91,11 +91,25 @@ function sendTextMessage(sender, text)
 */
 
 app.post('/webhook', function (req, res) {
+
   var data = req.body;
 
   // Make sure this is a page subscription
   if (data.object === 'page') {
 
+        var events = data.entry[0].messaging;
+
+        for (var i = 0; i < events.length; i++) {
+                var event = events[i];
+                if (event.message && !event.message.is_echo) {
+                        receivedMessage(event);
+                }
+                //else {
+                //        console.log("Webhook received unknown event: ", event);
+                //}
+        }
+
+    /*
     // Iterate over each entry - there may be multiple if batched
     data.entry.forEach(function(entry) {
       var pageID = entry.id;
@@ -110,6 +124,7 @@ app.post('/webhook', function (req, res) {
         }
       });
     });
+    */
 
     // Assume all went well.
     //
