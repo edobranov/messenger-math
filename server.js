@@ -116,7 +116,7 @@ function receivedMessage(event) {
                         break;
 
                         default:
-                                if (messageText.match(/^[0-9\+\-\*\/\t ]*$/)) {
+                                //if (messageText.match(/^[0-9\+\-\*\/\t ]*$/)) {
                                         var ans = Parser.evaluate(messageText);
                                         if (ans) {
                                                 sendTextMessage(senderID, ans.toString());
@@ -125,7 +125,7 @@ function receivedMessage(event) {
                                                 sendTextMessage(senderID, "Hmm, your expression doesn't " +
                                                         "look quite right... Try typing 'help' for some guidance.");
                                         }
-                                }
+                                //}
                                 else {
                                         sendTextMessage(senderID, "Hmm, your expression doesn't " +
                                                 "look quite right... Try typing 'help' for some guidance.");
@@ -137,7 +137,7 @@ function receivedMessage(event) {
         }
 }
 
-//function checkInputValidity(messageText) {
+// function checkInputValidity(messageText) {
         
 //        return messageText.value.match(/^[0-9]+$/);
 
