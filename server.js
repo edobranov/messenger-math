@@ -116,6 +116,18 @@ function receivedMessage(event) {
                         break;
 
                         default:
+                                try {
+                                        messageText = Parser.evaluate(messageText).toString();
+                                }
+                                catch (err) {
+                                        console.log(err);
+                                        messageText = "Hmm, your expression doesn't look quite " +
+                                                      "right... Try typing 'help' for some guidance.";
+                                }
+                                finally {
+                                        sendTextMessage(senderID, messageText);
+                                }
+                                /*
                                 if (messageText.match(/^[0-9\+\-\*\/\t ]*$/)) {
                                         var ans = Parser.evaluate(messageText);
                                         if (ans) {
@@ -130,6 +142,7 @@ function receivedMessage(event) {
                                         sendTextMessage(senderID, "Hmm, your expression doesn't " +
                                                 "look quite right... Try typing 'help' for some guidance.");
                                 }
+                                */
                 }
 
         } else if (messageAttachments) {
