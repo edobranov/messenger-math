@@ -122,6 +122,8 @@ function receivedMessage(event) {
                                                "- grouping (a * (b + c))\n"                    +
                                                "Full documentation can be found at:\n"         +
                                                "https://github.com/silentmatt/expr-eval/tree/master";
+                                               
+                                sendTextMessage(senderID, messageText);
                         break;
 
                         // Try evaluating the expression and handle any possible errors
