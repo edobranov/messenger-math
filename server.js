@@ -126,10 +126,10 @@ function receivedMessage(event) {
                                                         "look quite right... Try typing 'help' for some guidance.");
                                         }
                                 //}
-                                else {
-                                        sendTextMessage(senderID, "Hmm, your expression doesn't " +
-                                                "look quite right... Try typing 'help' for some guidance.");
-                                }
+                                //else {
+                                //        sendTextMessage(senderID, "Hmm, your expression doesn't " +
+                                //                "look quite right... Try typing 'help' for some guidance.");
+                                //}
                 }
 
         } else if (messageAttachments) {
