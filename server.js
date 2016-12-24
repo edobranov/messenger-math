@@ -31,6 +31,9 @@ var db          = MongoClient.connect(mongoUri, function(error, databaseConnecti
                         }
                         else {
                                 console.log("DB not connected");
+                                console.log("error: ", error);
+                                console.log("MONGOLAB_URI: ", process.env.MONGOLAB_URI);
+                                console.log("MONGOHW_URL: ", process.env.MONGOHW_URL);
                         }
                   });
 
