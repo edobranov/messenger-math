@@ -22,7 +22,7 @@ app.use(function(request, response, next) {
 */
 
 // Initialize the MongoDB client and establish a connection to the database
-var mongoUri    = process.env.MONGOLAB_URI || process.env.MONGOHW_URL || 'mongodb://localhost/messenger-math';
+var mongoUri    = process.env.MONGODB_URI || process.env.MONGOHW_URL || 'mongodb://localhost/messenger-math';
 var MongoClient = require('mongodb').MongoClient, format = ('util').format;
 var db          = MongoClient.connect(mongoUri, function(error, databaseConnection) {
                         if (!error) {
