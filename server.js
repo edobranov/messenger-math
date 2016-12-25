@@ -1,5 +1,5 @@
 // Filename:    server.js
-// Description: Server file for messenger bot
+// Description: Server file with routes for messenger bot
 // Author:      EVGENI C. DOBRANOV
 // Date:        12/23/2016
 
@@ -10,29 +10,6 @@ var Parser     = require('expr-eval').Parser;
 
 // Initialize the body parser (lets us get data from POST)
 app.use(bodyParser.json());
-
-/*
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(function(request, response, next) {
-        response.header("Access-Control-Allow-Origin", "*");
-        response.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-        next();
-});
-*/
-
-/****************************************************************************
- * Initialize the MongoDB client and establish a connection to the database *
- ****************************************************************************/
-var mongoUri    = process.env.MONGODB_URI || process.env.MONGOHW_URL || 'mongodb://localhost/messenger-math';
-var MongoClient = require('mongodb').MongoClient, format = ('util').format;
-var db          = MongoClient.connect(mongoUri, function (error, databaseConnection) {
-                        if (!error) {
-                                db = databaseConnection;
-                        }
-                        else {
-                                console.log("MONGODB connection unsuccessful: ", error);
-                        }
-                  });
 
 /**************************************
  * Default route for app landing page *
@@ -73,8 +50,8 @@ app.post('/webhook', function (req, res) {
                 var events = data.entry[0].messaging
                 for (var i = 0; i < events.length; i++)
                 {
-                        // Process current event only if it's a message and isn't an
-                        // echo (indicates a message sent from the bot itself)
+                        // Process current event only if it's a message and
+                        // isn't an echo (a message sent from the bot itself)
                         var event = events[i];
                         if (event.message && !event.message.is_echo) {
                                 receivedMessage(event);
@@ -92,20 +69,26 @@ function receivedMessage(event) {
 
         // Local variables separating all message event entities
         var senderID           = event.sender.id;
-        var recipientID        = event.recipient.id;
-        var timeOfMessage      = event.timestamp;
+        // var recipientID        = event.recipient.id;
+        // var timeOfMessage      = event.timestamp;
         var message            = event.message;
-        var messageId          = message.mid;
+        // var messageId          = message.mid;
         var messageText        = message.text;
         var messageAttachments = message.attachments;
 
+        /*
         console.log("Received message for user %d and page %d at %d with message:", 
                 senderID, recipientID, timeOfMessage);
         console.log(JSON.stringify(message));
+        */
 
         // Process cases from user input
         if (messageText)
         {
+                if (messageText.match(/(help)/i)) {
+                        messageText = "help";
+                }
+
                 switch (messageText) {
 
                         case 'help' :
@@ -122,7 +105,7 @@ function receivedMessage(event) {
                                                "- grouping (a * (b + c))\n"                    +
                                                "Full documentation can be found at:\n"         +
                                                "https://github.com/silentmatt/expr-eval/tree/master";
-                                               
+
                                 sendTextMessage(senderID, messageText);
                         break;
 
@@ -146,9 +129,9 @@ function receivedMessage(event) {
         }
 }
 
-/****************************************************
- * Construct message response and call API function *
- ****************************************************/
+/**********************************************************
+ * Construct message response and call request() function *
+ **********************************************************/
 function sendTextMessage(recipientId, messageText) {
         
         var messageData = {
@@ -159,9 +142,9 @@ function sendTextMessage(recipientId, messageText) {
         callSendAPI(messageData);
 }
 
-/*****************************************************************
- * Calls the Messenger API to return all of the data to the user *
- *****************************************************************/
+/************************************
+ * Sends processed data to the user *
+ ************************************/
 function callSendAPI(messageData) {
 
         request (
@@ -171,6 +154,7 @@ function callSendAPI(messageData) {
                 method : 'POST',
                 json   : messageData
         },
+
         // Debugging output for response (or attempt) made
         function (error, response, body) {
                 if (!error && response.statusCode == 200) {
@@ -186,7 +170,9 @@ function callSendAPI(messageData) {
         });  
 }
 
-// Find the port number, and start the server on that port
+/**********************************************************
+* Find the port number, and start the server on that port *
+***********************************************************/
 var port = process.env.PORT || 5000
 app.listen(port);
 console.log("Magic happens on port " + port);

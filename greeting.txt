@@ -1,1 +1,1 @@
-curl -X POST -H "Content-Type: application/json" -d '{ "setting_type":"greeting", "greeting":{ "text":"Hey {{user_first_name}}! Type 'help' for more options." } }' "https://graph.facebook.com/v2.6/me/thread_settings?access_token=<ACCESS_TOKEN>"
+curl -X POST -H "Content-Type: application/json" -d '{ "setting_type":"greeting", "greeting":{ "text":"Hey {{user_first_name}}! Try typing out math expressions, or type \u0027help\u0027 for a list of commands." } }' "https://graph.facebook.com/v2.6/me/thread_settings?access_token=<ACCESS_TOKEN>"
