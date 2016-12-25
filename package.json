@@ -13,7 +13,6 @@
 	    "express"     : "latest",
 	    "body-parser" : "latest",
 	    "request"     : "latest",
-	    "mongodb"     : "latest",
 	    "expr-eval"   : "latest"
 	}
 }
